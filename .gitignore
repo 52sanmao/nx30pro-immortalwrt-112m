@@ -1,0 +1,3 @@
+.test/
+.test.orig/
+__pycache__/
