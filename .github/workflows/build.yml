@@ -58,6 +58,12 @@ jobs:
       - name: 改成 112M 大分区
         run: python3 scripts/enable_112m.py openwrt
 
+      - name: 更新并安装 feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
       - name: 保存改动 diff
         run: |
           cd openwrt
@@ -70,8 +76,8 @@ jobs:
           cat > .config <<'EOC'
           CONFIG_TARGET_mediatek=y
           CONFIG_TARGET_mediatek_filogic=y
-          CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_h3c_magic-nx30-pro=y
           CONFIG_TARGET_MULTI_PROFILE=n
+          CONFIG_TARGET_mediatek_filogic_DEVICE_h3c_magic-nx30-pro=y
           CONFIG_PACKAGE_luci=y
           EOC
           if [ -n "${{ inputs.extra_packages }}" ]; then
@@ -83,10 +89,10 @@ jobs:
           echo "=== nx30 相关配置 ==="
           grep -i "nx30" .config || echo "(无)"
           echo "=== 已选设备 ==="
-          grep -c "^CONFIG_TARGET_DEVICE_" .config
+          grep "^CONFIG_TARGET_.*DEVICE_" .config || echo "(无)"
           echo "=== 关键配置 ==="
-          grep -E "CONFIG_TARGET_MULTI_PROFILE|CONFIG_TARGET_ROOTFS_SQUASHFS" .config || true
-          grep -q "DEVICE_h3c_magic-nx30-pro=y" .config || { echo "ERROR: 设备未被选中，符号名可能不对"; exit 1; }
+          grep -E "CONFIG_TARGET_MULTI_PROFILE|CONFIG_TARGET_ROOTFS_SQUASHFS|CONFIG_PACKAGE_luci=" .config || true
+          grep -q "DEVICE_h3c_magic-nx30-pro=y" .config || { echo "ERROR: 设备未被选中"; exit 1; }
 
       - name: 预下载源码包
         run: |
